@@ -1,6 +1,6 @@
 Mac-Shells
 ==========
 
-useful shell script under mac
+一些有用的mac下的shell脚本工具
 
-+ icns util: This tool is used to convert .png to .icns
++ icns util: 将png格式图片转换成mac图标格式icns
