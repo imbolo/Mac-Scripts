@@ -13,6 +13,7 @@ else
 	while [ $i -lt $len ]
 	do
 		cp $1 "icon.iconset/icon_${sizeName[$i]}.png";
+		
 		sips -Z 1024 icon.iconset/icon_${sizeName[$i]}.png;
 		
 		let i++;
