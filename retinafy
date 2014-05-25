@@ -1,0 +1,30 @@
+if [ -z $1 ];then
+	echo "how to: retina xxx.png";
+	
+else
+
+	for file in "$@"
+	do
+		echo "retinafy $1"
+	
+		filename=$(basename $file)
+		extension="${filename##*.}"
+		filename="${filename%.*}"
+	
+		width=$(sips -g pixelWidth $file | awk '{print $2}')
+		height=$(sips -g pixelHeight $file | awk '{print $2}')
+	
+		echo "width: $width px"
+		echo "height: $height px"
+	
+		w=$(expr $width / 2)
+		h=$(expr $height / 2)
+	
+		# make an copy named @2x
+		cp $file "${filename}@2x.${extension}"
+	
+		#resample 1/2
+		sips -z $h $w $file
+		
+	done
+fi
