@@ -1,0 +1,19 @@
+w=$1
+shift 
+h=$1
+shift
+
+if [ -z $1 ];then
+	echo "how to: resize pixelW pixelH xxx.png";
+
+else
+
+	for file in "$@"
+	do
+		echo "resize $file w=$w h=$h"
+
+		#resample 1/2
+		# sips -z $h $w $file
+	
+	done
+fi
