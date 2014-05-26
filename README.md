@@ -1,4 +1,4 @@
-Mac-Shells
+Mac-Scripts
 ==========
 
 一些有用的mac下的shell脚本工具
