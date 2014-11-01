@@ -1,0 +1,24 @@
+#!/usr/bin/env node
+
+var fs = require('fs');
+var	exec = require('child_process').exec;
+var path = require('path');
+var watch = require('node-watch');
+	
+main();	
+	
+function main() {
+	var cwd = process.cwd();
+	var packagePath = process.argv[2];
+	packagePath = path.resolve(cwd, packagePath);
+	
+	watch(packagePath, function(file) {
+		var script = 'cd ' + path.dirname(packagePath) + ' && grunt'; 
+		console.log(script);
+		exec(script, function(err, stderr, stdout) {
+			console.log(err);
+			console.log(stderr);
+			console.log(stdout);
+		});
+	});
+};

@@ -1,0 +1,104 @@
+#!/usr/bin/env node
+//noinspection JSUnresolvedFunction,JSUnresolvedVariable
+/**
+ * Generate xtemplate function by xtemplate file using kissy xtemplate.
+ * @author yiminghe@gmail.com
+ */
+
+var program = require('./lib/commander');
+var _ = require('lodash');
+var exec = require('child_process').exec;
+program
+		.option('-prefix --prefix', 'prefix')
+    .option('-p, --package-path <packagePath>', 'Set kissy package path')
+    .option('-e, --encoding [encoding]', 'Set xtemplate file encoding', 'utf-8')
+    .option('-w, --watch', 'Watch xtemplate file change')
+    .parse(process.argv);
+
+var chokidar = require('chokidar'),
+/*jshint camelcase: false*/
+    jsBeautify = require('js-beautify').js_beautify,
+    fs = require('fs'),
+    path = require('path'),
+    packagePath = program.packagePath,
+    encoding = program.encoding,
+    cwd = process.cwd();
+
+packagePath = path.resolve(cwd, packagePath);
+
+var tplTop = 'KISSY.add(function(S) {\n';
+
+var tplBototm = '}, {requires: ["kloud/vendor/angular/angular"]});';
+
+var tpl = 
+'angular.module(\'<%= templateUrl %>\', []).run(["$templateCache", function($templateCache) { ' +
+	'$templateCache.put(\'<%= templateUrl %>\', \'<%= html %>\');\n' +
+'}]);\n';
+
+var moduleTpl = 
+'angular.module("<%= tplModuleName %>", <%= modules %>)'
+
+function normalizeSlash(str) {
+    return str.replace(/\\/g, '/');
+}
+
+var escapeContent = function(content, quoteChar, indentString) {
+  var bsRegexp = new RegExp('\\\\', 'g');
+  var quoteRegexp = new RegExp('\\' + quoteChar, 'g');
+  var nlReplace = '\\n' + quoteChar + ' +\n' + indentString + indentString + quoteChar;
+  return content.replace(bsRegexp, '\\\\').replace(quoteRegexp, '\\' + quoteChar).replace(/\r?\n/g, nlReplace);
+};
+
+function processFile(filepath) {
+	var modulePath;
+
+	var file = fs.readFileSync(filepath, {encoding: 'utf8'});
+	//file = file.replace(/\'/g, "\\\'").replace(/\"/g, "\\\"").replace(/\\s*|\t|\r|\n/g, "");
+	file = file.replace(/>(\n|\s)*\</g, '><').replace(/\'/g, "\\\'").replace(/\"/g, "\\\"");
+	var script = _.template(tpl)({
+		templateUrl: path.basename(filepath),
+		html: file
+	});
+	
+	return myJsBeautify(script);
+}
+
+function myJsBeautify(str) {
+  var opts = {
+    'indent_size': '4',
+    'indent_char': ' ',
+    'preserve_newlines': true,
+    'brace_style': 'collapse',
+    'keep_array_indentation': false,
+    'space_after_anon_function': true
+  };
+  return jsBeautify(str, opts);
+}
+
+function generateTplJS(packagePath) {
+	
+	var fileArray = fs.readdirSync(packagePath);
+	
+	var script = tplTop;
+	
+	fileArray.forEach(function(file) {
+		script += processFile(packagePath + '/' + file);
+	});
+	
+	script += _.template(moduleTpl)({
+		tplModuleName: 'uc.tpl',
+		modules: JSON.stringify(fileArray)
+	});
+	
+	script += tplBototm;
+	
+	fs.writeFileSync('tpl.js', script);
+}
+
+fs.watch(packagePath, function(event, file) {
+	console.log('file changed, generating tpl.js');
+	generateTplJS(packagePath);
+});
+
+
+
